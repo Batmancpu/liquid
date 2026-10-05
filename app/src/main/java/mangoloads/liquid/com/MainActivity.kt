@@ -29,11 +29,9 @@ class MainActivity : android.app.Activity() {
             cornerRadius = 34f * resources.displayMetrics.density
             refractionHeight = 72f
             bevelWidth = 28f
-
             dispersionStrength = 0.08f
             enableSensorHighlight = true
             enableAdaptiveTint = true
-
         }
 
         glass.addView(
@@ -57,20 +55,26 @@ class MainActivity : android.app.Activity() {
         )
 
         val edit = EditText(this).apply {
-            hint = "Focus this: real IME haze test"
+            hint = "Tap here to test the glass keyboard"
             textSize = 18f
             setTextColor(Color.WHITE)
             setHintTextColor(0xAAFFFFFF.toInt())
             setBackgroundColor(0xFF1457FF.toInt())
             setSingleLine(false)
+            setPadding(
+                (16 * resources.displayMetrics.density).toInt(),
+                (12 * resources.displayMetrics.density).toInt(),
+                (16 * resources.displayMetrics.density).toInt(),
+                (12 * resources.displayMetrics.density).toInt()
+            )
         }
         root.addView(
             edit,
             FrameLayout.LayoutParams(-1, (82 * resources.displayMetrics.density).toInt()).apply {
                 gravity = Gravity.BOTTOM
-                leftMargin = 20
-                rightMargin = 20
-                bottomMargin = 90
+                leftMargin = (20 * resources.displayMetrics.density).toInt()
+                rightMargin = (20 * resources.displayMetrics.density).toInt()
+                bottomMargin = (90 * resources.displayMetrics.density).toInt()
             }
         )
 
@@ -84,9 +88,9 @@ class MainActivity : android.app.Activity() {
             button,
             FrameLayout.LayoutParams(-1, (62 * resources.displayMetrics.density).toInt()).apply {
                 gravity = Gravity.BOTTOM
-                leftMargin = 20
-                rightMargin = 20
-                bottomMargin = 18
+                leftMargin = (20 * resources.displayMetrics.density).toInt()
+                rightMargin = (20 * resources.displayMetrics.density).toInt()
+                bottomMargin = (18 * resources.displayMetrics.density).toInt()
             }
         )
 
@@ -101,14 +105,17 @@ class MainActivity : android.app.Activity() {
             info,
             FrameLayout.LayoutParams(-2, -2).apply {
                 gravity = Gravity.TOP or Gravity.START
-                leftMargin = 16
-                topMargin = 24
+                leftMargin = (16 * resources.displayMetrics.density).toInt()
+                topMargin = (24 * resources.displayMetrics.density).toInt()
             }
         )
 
-        edit.setOnFocusChangeListener { _, hasFocus ->
+        edit.setOnFocusChangeListener { view, hasFocus ->
             if (hasFocus) {
-                getSystemService(InputMethodManager::class.java)?.showInputMethodPicker()
+                view.post {
+                    getSystemService(InputMethodManager::class.java)
+                        ?.showSoftInput(view, InputMethodManager.SHOW_IMPLICIT)
+                }
             }
         }
     }
