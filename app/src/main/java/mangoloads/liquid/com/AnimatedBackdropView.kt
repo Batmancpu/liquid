@@ -1,4 +1,4 @@
-package mangaloads.liquid.com
+package mangoloads.liquid.com
 
 import android.content.Context
 import android.graphics.Canvas

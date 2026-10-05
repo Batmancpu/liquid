@@ -1,4 +1,4 @@
-package mangaloads.liquid.com
+package mangoloads.liquid.com
 
 import android.content.Intent
 import android.graphics.Color
@@ -29,11 +29,11 @@ class MainActivity : android.app.Activity() {
             cornerRadius = 34f * resources.displayMetrics.density
             refractionHeight = 72f
             bevelWidth = 28f
-            refractionFalloff = 2f
+
             dispersionStrength = 0.08f
             enableSensorHighlight = true
             enableAdaptiveTint = true
-            glassTint = 0x220A84FF
+
         }
 
         glass.addView(
