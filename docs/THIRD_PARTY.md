@@ -4,7 +4,7 @@ Primary optical dependency:
 QWEA0 / Liquid-Glass-Android
 https://github.com/QWEA0/Liquid-Glass-Android
 License: MIT
-Pinned in this lab as com.github.QWEA0:liquidglass:v2.0.11
+Pinned in this lab as com.github.QWEA0:liquidglass:v2.0.1
 
 Optical reference:
 Kyant0 / AndroidLiquidGlass

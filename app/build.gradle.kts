@@ -5,30 +5,41 @@ plugins {
 
 android {
     namespace = "mangoloads.liquid.com"
-    compileSdk = 36
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "mangoloads.liquid.com"
         minSdk = 33
-        targetSdk = 36
-        versionCode = 1
-        versionName = "0.1-liquid-lab"
+        targetSdk = 34
+        versionCode = 2
+        versionName = "0.2-liquid-lab"
+    }
+
+    signingConfigs {
+        create("lab_signing") {
+            storeFile = file("lab_key.jks")
+            storePassword = "lab_password"
+            keyAlias = "lab_alias"
+            keyPassword = "lab_password"
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("lab_signing")
         }
         debug {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("lab_signing")
         }
     }
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
 }
 
 dependencies {
-    implementation("com.github.QWEA0:liquidglass:v2.0.11")
+    implementation("com.github.QWEA0:Liquid-Glass-Android:v2.0.1")
 }

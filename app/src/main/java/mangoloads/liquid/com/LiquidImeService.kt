@@ -1,6 +1,6 @@
-package mangaloads.liquid.com
+package mangoloads.liquid.com
 
-import android.graphics.GradientDrawable
+import android.graphics.drawable.GradientDrawable
 import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.view.View
@@ -22,7 +22,7 @@ class LiquidImeService : InputMethodService() {
         restarting: Boolean
     ) {
         super.onStartInputView(info, restarting)
-        window?.window?.let { configureWindow(it, inputView) }
+        window?.window?.let { configureWindow(it, window?.window?.decorView) }
     }
 
     override fun onDestroy() {
