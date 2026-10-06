@@ -11,8 +11,8 @@ android {
         applicationId = "mangoloads.liquid.com"
         minSdk = 33
         targetSdk = 34
-        versionCode = 3
-        versionName = "0.3-liquid-lab"
+        versionCode = 6
+        versionName = "0.6-liquid-glass-optical-ime"
     }
 
     signingConfigs {
@@ -41,5 +41,5 @@ kotlin {
 }
 
 dependencies {
-    implementation("com.github.QWEA0:Liquid-Glass-Android:v2.0.1")
+    implementation("com.github.QWEA0:liquidglass:v2.0.11")
 }
