@@ -37,10 +37,10 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         setBackgroundColor(Color.TRANSPARENT)
 
         surfaceView = KeyboardGlassSurfaceView(context, this)
-        addView(surfaceView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        addView(surfaceView, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
 
         foregroundView = KeyboardForegroundView(context, this)
-        addView(foregroundView, LayoutParams(MATCH_PARENT, MATCH_PARENT))
+        addView(foregroundView, LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
         foregroundView.bringToFront()
     }
 
