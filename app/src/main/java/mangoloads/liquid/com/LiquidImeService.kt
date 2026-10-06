@@ -12,6 +12,7 @@ import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 
 class LiquidImeService : InputMethodService() {
+    private lateinit var ambientLight: AmbientLightController
     private var blurEnabled = false
     private var localOpticalBackdrop = false
     private var panel: ImeGlassPanelView? = null
