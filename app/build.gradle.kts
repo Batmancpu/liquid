@@ -11,8 +11,8 @@ android {
         applicationId = "mangoloads.liquid.com"
         minSdk = 33
         targetSdk = 34
-        versionCode = 7
-        versionName = "0.7-liquid-glass-optical-debug"
+        versionCode = 8
+        versionName = "0.8-ambient-light-glass"
     }
 
     signingConfigs {

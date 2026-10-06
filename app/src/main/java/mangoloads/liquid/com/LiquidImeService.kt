@@ -18,6 +18,7 @@ class LiquidImeService : InputMethodService() {
 
     override fun onCreate() {
         super.onCreate()
+        ambientLight = AmbientLightController(this)
         window?.window?.let(::configureWindow)
     }
 
@@ -34,6 +35,7 @@ class LiquidImeService : InputMethodService() {
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        ambientLight.start()
         window?.window?.let(::configureWindow)
         panel?.resetTransientState()
         panel?.refreshBackdropMode()
@@ -93,6 +95,8 @@ class LiquidImeService : InputMethodService() {
         }
     }
 
+    internal fun ambientState(): AmbientLightController.State = ambientLight.current()
+
     fun isNativeBlurEnabled(): Boolean =
         blurEnabled && !localOpticalBackdrop
 
@@ -123,6 +127,7 @@ class LiquidImeService : InputMethodService() {
         getSystemService(PowerManager::class.java)?.isPowerSaveMode == true
 
     override fun onDestroy() {
+        ambientLight.stop()
         panel = null
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             window?.window?.setBackgroundBlurRadius(0)

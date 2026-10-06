@@ -29,6 +29,7 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
 
     private val surfaceView: KeyboardGlassSurfaceView
     private val glassView: LiquidGlassView
+    private val ambientLightView: AmbientLightGlassView
     private val foregroundView: KeyboardForegroundView
 
     private fun dp(value: Float): Float =
@@ -82,6 +83,15 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         )
 
         // Text remains crisp above the glass.
+        ambientLightView = AmbientLightGlassView(context, this)
+        addView(
+            ambientLightView,
+            LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        )
+
         foregroundView = KeyboardForegroundView(context, this)
         addView(
             foregroundView,
@@ -125,12 +135,14 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         val hs = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
         surfaceView.measure(ws, hs)
         glassView.measure(ws, hs)
+        ambientLightView.measure(ws, hs)
         foregroundView.measure(ws, hs)
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         surfaceView.layout(0, 0, width, height)
         glassView.layout(0, 0, width, height)
+        ambientLightView.layout(0, 0, width, height)
         foregroundView.layout(0, 0, width, height)
     }
 
@@ -217,6 +229,10 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
             key.label
         }
 
+    internal fun ambientState(): AmbientLightController.State =
+        (context as? LiquidImeService)?.ambientState()
+            ?: AmbientLightController.State()
+
     internal fun isNativeBlurEnabled(): Boolean =
         (context as? LiquidImeService)?.isNativeBlurEnabled() == true
 
@@ -250,6 +266,7 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         invalidate()
         surfaceView.invalidate()
         glassView.invalidate()
+        ambientLightView.invalidate()
         foregroundView.invalidate()
     }
 
