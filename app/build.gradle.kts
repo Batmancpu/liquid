@@ -11,8 +11,8 @@ android {
         applicationId = "mangoloads.liquid.com"
         minSdk = 33
         targetSdk = 34
-        versionCode = 8
-        versionName = "0.8-ambient-light-glass"
+        versionCode = 9
+        versionName = "0.9-ambient-haze"
     }
 
     signingConfigs {
@@ -41,5 +41,4 @@ kotlin {
 }
 
 dependencies {
-    implementation("com.github.QWEA0:liquidglass:v2.0.11")
 }
