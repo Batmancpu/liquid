@@ -17,6 +17,11 @@ class MainActivity : android.app.Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Keep this lab Activity full-size when the IME appears so the native
+        // cross-window blur has real content behind the keyboard instead of a
+        // resized/empty region. This is only for the Liquid Lab test harness.
+        window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+
         val root = FrameLayout(this)
         root.setBackgroundColor(Color.rgb(6, 8, 16))
         setContentView(root)
@@ -49,9 +54,7 @@ class MainActivity : android.app.Activity() {
             FrameLayout.LayoutParams(
                 (300 * resources.displayMetrics.density).toInt(),
                 (132 * resources.displayMetrics.density).toInt()
-            ).apply {
-                gravity = Gravity.CENTER
-            }
+            ).apply { gravity = Gravity.CENTER }
         )
 
         val edit = EditText(this).apply {
@@ -80,9 +83,7 @@ class MainActivity : android.app.Activity() {
 
         val button = Button(this).apply {
             text = "Open keyboard settings"
-            setOnClickListener {
-                startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
-            }
+            setOnClickListener { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
         }
         root.addView(
             button,

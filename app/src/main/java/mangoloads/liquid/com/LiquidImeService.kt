@@ -15,9 +15,6 @@ class LiquidImeService : InputMethodService() {
     private var blurEnabled = false
     private var panel: ImeGlassPanelView? = null
 
-    private fun keyboardHeightPx(): Int =
-        (292f * resources.displayMetrics.density).toInt()
-
     override fun onCreate() {
         super.onCreate()
         window?.window?.let { configureWindow(it) }
@@ -47,12 +44,18 @@ class LiquidImeService : InputMethodService() {
         isFullscreen: Boolean,
         isCandidatesOnly: Boolean
     ) {
+        // Let InputMethodService keep the correct MATCH_PARENT x WRAP_CONTENT
+        // non-fullscreen IME geometry. A fixed pixel height here was causing
+        // ColorOS to place the IME surface above the navigation region.
         super.onConfigureWindow(win, false, isCandidatesOnly)
+
         win.setGravity(Gravity.BOTTOM)
-        win.setLayout(
-            WindowManager.LayoutParams.MATCH_PARENT,
-            keyboardHeightPx()
-        )
+        val attrs = win.attributes
+        attrs.width = WindowManager.LayoutParams.MATCH_PARENT
+        attrs.height = WindowManager.LayoutParams.WRAP_CONTENT
+        attrs.dimAmount = 0f
+        attrs.flags = attrs.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND.inv()
+        win.attributes = attrs
     }
 
     override fun onEvaluateFullscreenMode(): Boolean = false
@@ -64,6 +67,15 @@ class LiquidImeService : InputMethodService() {
         window.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
         window.setGravity(Gravity.BOTTOM)
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+            window.navigationBarColor = Color.TRANSPARENT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.isNavigationBarContrastEnforced = false
+            }
+            window.setNavigationBarDividerColor(Color.TRANSPARENT)
+        }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val wm = getSystemService(WindowManager::class.java)
             blurEnabled = runCatching {
@@ -74,14 +86,14 @@ class LiquidImeService : InputMethodService() {
 
             val attrs = window.attributes
             attrs.width = WindowManager.LayoutParams.MATCH_PARENT
-            attrs.height = keyboardHeightPx()
+            attrs.height = WindowManager.LayoutParams.WRAP_CONTENT
             attrs.dimAmount = 0f
             attrs.flags = attrs.flags and WindowManager.LayoutParams.FLAG_DIM_BEHIND.inv()
             window.attributes = attrs
         } else {
             window.setLayout(
                 WindowManager.LayoutParams.MATCH_PARENT,
-                keyboardHeightPx()
+                WindowManager.LayoutParams.WRAP_CONTENT
             )
         }
     }

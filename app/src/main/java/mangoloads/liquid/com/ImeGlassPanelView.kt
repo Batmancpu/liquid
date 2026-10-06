@@ -34,9 +34,9 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         value * resources.displayMetrics.density
 
     init {
-        isClickable = false
-        clipChildren = false
         setBackgroundColor(Color.TRANSPARENT)
+        clipChildren = false
+        isClickable = false
 
         backdropView = KeyboardBackdropView(context, this)
         addView(
@@ -47,13 +47,21 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
             )
         )
 
+        // IMPORTANT:
+        // QWEA0's dynamic backdrop capture is a same-window renderer. An IME
+        // is a separate system window, so letting it capture its own hierarchy
+        // produces the vertically displaced "reflection" seen in the previous
+        // build. Native cross-window blur is the real environmental source here.
+        //
+        // Keep the LiquidGlassView as the optical/material layer, but don't ask
+        // it to capture the IME hierarchy as a fake cross-window backdrop.
         glassView = LiquidGlassView(context).apply {
-            enableDynamicBackground = true
+            enableDynamicBackground = false
             material = GlassMaterial.CLEAR
             cornerRadius = dp(26f)
             refractionHeight = dp(30f)
             bevelWidth = dp(26f)
-            dispersionStrength = 0.055f
+            dispersionStrength = 0.045f
             enableSensorHighlight = true
             enableAdaptiveTint = true
             isClickable = false
@@ -78,13 +86,31 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
             )
         )
         foregroundView.bringToFront()
-
-        post { glassView.invalidate() }
     }
 
-    override fun onDetachedFromWindow() {
-        pressedKey = null
-        super.onDetachedFromWindow()
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val width = MeasureSpec.getSize(widthMeasureSpec)
+        val wanted = dp(292f).toInt()
+        val height = when (MeasureSpec.getMode(heightMeasureSpec)) {
+            MeasureSpec.EXACTLY -> MeasureSpec.getSize(heightMeasureSpec)
+            MeasureSpec.AT_MOST -> minOf(wanted, MeasureSpec.getSize(heightMeasureSpec))
+            else -> wanted
+        }
+        setMeasuredDimension(width, height)
+
+        val childWidth = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
+        val childHeight = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+        backdropView.measure(childWidth, childHeight)
+        glassView.measure(childWidth, childHeight)
+        foregroundView.measure(childWidth, childHeight)
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        val w = right - left
+        val h = bottom - top
+        backdropView.layout(0, 0, w, h)
+        glassView.layout(0, 0, w, h)
+        foregroundView.layout(0, 0, w, h)
     }
 
     internal fun outerRect(): RectF = RectF(
@@ -153,17 +179,13 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         val bottom = dp(11f)
         val availableWidth = width - side * 2f
         val availableHeight = height - top - bottom
-        val rowHeight =
-            (availableHeight - gap * (rows.size - 1)) / max(rows.size, 1)
+        val rowHeight = (availableHeight - gap * (rows.size - 1)) / max(rows.size, 1)
 
         val result = ArrayList<RectF>()
         var y = top
-
         for (row in rows) {
             val weightSum = row.sumOf { it.weight.toDouble() }.toFloat()
-            val baseUnit =
-                (availableWidth - gap * (row.size - 1)) / max(weightSum, 1f)
-
+            val baseUnit = (availableWidth - gap * (row.size - 1)) / max(weightSum, 1f)
             var x = side
             for (key in row) {
                 val w = baseUnit * key.weight
@@ -176,11 +198,7 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
     }
 
     internal fun displayLabel(key: KeyDef): String =
-        if (key.action == Action.TEXT && key.value.length == 1 && shift) {
-            key.value.uppercase()
-        } else {
-            key.label
-        }
+        if (key.action == Action.TEXT && key.value.length == 1 && shift) key.value.uppercase() else key.label
 
     internal fun isKeyPressed(index: Int): Boolean {
         val key = currentRows().flatten().getOrNull(index)
@@ -222,7 +240,6 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
 
     private fun handleKey(key: KeyDef) {
         val ime = context as? LiquidImeService ?: return
-
         when (key.action) {
             Action.TEXT -> {
                 val value = if (key.value.length == 1 && shift) key.value.uppercase() else key.value
@@ -257,9 +274,9 @@ class KeyboardForegroundView(
     private val small = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
 
     init {
-        isClickable = true
         text.typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
         small.typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+        isClickable = true
     }
 
     private fun dp(value: Float): Float = value * resources.displayMetrics.density
@@ -269,13 +286,8 @@ class KeyboardForegroundView(
         small.color = 0xD8FFFFFF.toInt()
         canvas.drawText("LIQUID GLASS", dp(22f), dp(27f), small)
 
-        val status = if (host.isNativeBlurEnabled()) "LIVE AMBIENT • OPTICAL" else "FALLBACK • OPTICAL"
-        canvas.drawText(
-            status,
-            width - dp(22f) - small.measureText(status),
-            dp(27f),
-            small
-        )
+        val status = if (host.isNativeBlurEnabled()) "LIVE AMBIENT" else "FALLBACK"
+        canvas.drawText(status, width - dp(22f) - small.measureText(status), dp(27f), small)
 
         val rows = host.currentRows()
         val rects = host.layoutRects(rows)
@@ -284,7 +296,6 @@ class KeyboardForegroundView(
         for (i in rects.indices) {
             val key = flat[i]
             val rect = rects[i]
-
             if (host.isKeyPressed(i)) {
                 val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
                     style = android.graphics.Paint.Style.FILL
@@ -299,7 +310,6 @@ class KeyboardForegroundView(
                 else -> dp(14f)
             }
             text.color = Color.WHITE
-
             val label = host.displayLabel(key)
             val tx = rect.centerX() - text.measureText(label) / 2f
             val ty = rect.centerY() - (text.ascent() + text.descent()) / 2f
@@ -309,18 +319,9 @@ class KeyboardForegroundView(
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> {
-                host.pressAt(event.x, event.y)
-                return true
-            }
-            MotionEvent.ACTION_UP -> {
-                host.releaseAt(event.x, event.y)
-                return true
-            }
-            MotionEvent.ACTION_CANCEL -> {
-                host.cancelPress()
-                return true
-            }
+            MotionEvent.ACTION_DOWN -> { host.pressAt(event.x, event.y); return true }
+            MotionEvent.ACTION_UP -> { host.releaseAt(event.x, event.y); return true }
+            MotionEvent.ACTION_CANCEL -> { host.cancelPress(); return true }
         }
         return true
     }
