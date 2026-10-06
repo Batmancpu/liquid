@@ -9,8 +9,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import com.example.liquidglass.GlassMaterial
-import com.example.liquidglass.LiquidGlassView
 import kotlin.math.max
 
 class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context) {
@@ -28,7 +26,6 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
     private var numeric = false
 
     private val surfaceView: KeyboardGlassSurfaceView
-    private val glassView: LiquidGlassView
     private val ambientLightView: AmbientLightGlassView
     private val foregroundView: KeyboardForegroundView
 
@@ -50,37 +47,8 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
             )
         )
 
-        // REAL Liquid Glass lens. The backdrop source is the Lab Activity
-        // window, not the keyboard's own sibling views.
-        glassView = LiquidGlassView(context).apply {
-            enableDynamicBackground = true
-            enableBackdropBlur = true
-            useShaderPipeline = true
-            material = GlassMaterial.CLEAR
-
-            cornerRadius = dp(38f)
-            bevelWidth = dp(30f)
-            refractionHeight = 52f
-            refractionFalloff = 1.4f
-            edgeSoftness = 2.0f
-            dispersionStrength = 0.045f
-
-            glassTint = Color.TRANSPARENT
-            enableAdaptiveTint = false
-            enableSensorHighlight = true
-
-            isClickable = false
-            isFocusable = false
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }
-
-        addView(
-            glassView,
-            LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        )
+        // Android compositor provides the live environmental haze outside the IME.
+        // No screen pixels are captured or sampled by this process.
 
         // Text remains crisp above the glass.
         ambientLightView = AmbientLightGlassView(context, this)
@@ -103,20 +71,8 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
     }
 
     internal fun refreshBackdropMode() {
-        val root = MainActivity.activeBackdropSource()
-        val valid = root != null && root.isShown && root.isAttachedToWindow
-
-        if (valid) {
-            glassView.backdropSource = root
-            glassView.enableDynamicBackground = true
-            glassView.visibility = View.VISIBLE
-        } else {
-            glassView.backdropSource = null
-            glassView.enableDynamicBackground = false
-            glassView.visibility = View.INVISIBLE
-        }
-
-        (context as? LiquidImeService)?.updateOpticalBackdropAvailable(valid)
+        // Deliberately no local optical backdrop: use Android's compositor haze.
+        (context as? LiquidImeService)?.updateOpticalBackdropAvailable(false)
         invalidateAll()
     }
 
@@ -134,14 +90,12 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         val ws = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
         val hs = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
         surfaceView.measure(ws, hs)
-        glassView.measure(ws, hs)
         ambientLightView.measure(ws, hs)
         foregroundView.measure(ws, hs)
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         surfaceView.layout(0, 0, width, height)
-        glassView.layout(0, 0, width, height)
         ambientLightView.layout(0, 0, width, height)
         foregroundView.layout(0, 0, width, height)
     }
@@ -265,7 +219,6 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
     private fun invalidateAll() {
         invalidate()
         surfaceView.invalidate()
-        glassView.invalidate()
         ambientLightView.invalidate()
         foregroundView.invalidate()
     }
