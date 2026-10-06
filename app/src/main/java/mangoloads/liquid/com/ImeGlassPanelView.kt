@@ -27,8 +27,8 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
     private var shift = false
     private var numeric = false
 
-    private val glassView: LiquidGlassView
     private val surfaceView: KeyboardGlassSurfaceView
+    private val glassView: LiquidGlassView
     private val foregroundView: KeyboardForegroundView
 
     private fun dp(value: Float): Float =
@@ -39,27 +39,7 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         clipChildren = false
         setBackgroundColor(Color.TRANSPARENT)
 
-        glassView = LiquidGlassView(context).apply {
-            enableDynamicBackground = true
-            material = GlassMaterial.CLEAR
-            cornerRadius = dp(26f)
-            refractionHeight = dp(28f)
-            bevelWidth = dp(24f)
-            dispersionStrength = 0.07f
-            enableSensorHighlight = true
-            enableAdaptiveTint = true
-            isClickable = false
-            isFocusable = false
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }
-        addView(
-            glassView,
-            LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        )
-
+        // Base keyboard geometry goes underneath the optical surface.
         surfaceView = KeyboardGlassSurfaceView(context, this)
         addView(
             surfaceView,
@@ -69,6 +49,39 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
             )
         )
 
+        // REAL Liquid Glass lens. The backdrop source is the Lab Activity
+        // window, not the keyboard's own sibling views.
+        glassView = LiquidGlassView(context).apply {
+            enableDynamicBackground = true
+            enableBackdropBlur = true
+            useShaderPipeline = true
+            material = GlassMaterial.CLEAR
+
+            cornerRadius = dp(38f)
+            bevelWidth = dp(30f)
+            refractionHeight = 52f
+            refractionFalloff = 1.4f
+            edgeSoftness = 2.0f
+            dispersionStrength = 0.045f
+
+            glassTint = Color.TRANSPARENT
+            enableAdaptiveTint = false
+            enableSensorHighlight = true
+
+            isClickable = false
+            isFocusable = false
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
+
+        addView(
+            glassView,
+            LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        )
+
+        // Text remains crisp above the glass.
         foregroundView = KeyboardForegroundView(context, this)
         addView(
             foregroundView,
@@ -77,7 +90,6 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         )
-        foregroundView.bringToFront()
     }
 
     internal fun refreshBackdropMode() {
@@ -85,22 +97,17 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         val valid = root != null && root.isShown && root.isAttachedToWindow
 
         if (valid) {
-            // QWEA0 explicitly supports a backdrop View from another window;
-            // overlap is resolved in screen coordinates and the AGSL lens gets
-            // the actual Activity pixels rather than our own keyboard keys.
             glassView.backdropSource = root
             glassView.enableDynamicBackground = true
             glassView.visibility = View.VISIBLE
         } else {
-            // No same-process host app is available. Do not let QWEA0 capture
-            // the keyboard's own sibling layers and produce false reflection.
             glassView.backdropSource = null
             glassView.enableDynamicBackground = false
             glassView.visibility = View.INVISIBLE
         }
 
         (context as? LiquidImeService)?.updateOpticalBackdropAvailable(valid)
-        invalidate()
+        invalidateAll()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -111,25 +118,27 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
             MeasureSpec.AT_MOST -> minOf(desired, MeasureSpec.getSize(heightMeasureSpec))
             else -> desired
         }
+
         setMeasuredDimension(width, height)
+
         val ws = MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY)
         val hs = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-        glassView.measure(ws, hs)
         surfaceView.measure(ws, hs)
+        glassView.measure(ws, hs)
         foregroundView.measure(ws, hs)
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        glassView.layout(0, 0, width, height)
         surfaceView.layout(0, 0, width, height)
+        glassView.layout(0, 0, width, height)
         foregroundView.layout(0, 0, width, height)
     }
 
     internal fun outerRect(): RectF = RectF(
-        dp(8f),
         dp(6f),
-        width - dp(8f),
-        height - dp(6f)
+        dp(5f),
+        width - dp(6f),
+        height - dp(5f)
     )
 
     internal fun currentRows(): List<List<KeyDef>> {
@@ -174,18 +183,21 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
 
     internal fun layoutRects(rows: List<List<KeyDef>>): List<RectF> {
         val gap = dp(5f)
-        val side = dp(14f)
-        val top = dp(39f)
-        val bottom = dp(11f)
+        val side = dp(12f)
+        val top = dp(15f)
+        val bottom = dp(12f)
         val availableWidth = width - side * 2f
         val availableHeight = height - top - bottom
         val rowHeight = (availableHeight - gap * (rows.size - 1)) / max(rows.size, 1)
 
         val result = ArrayList<RectF>()
         var y = top
+
         for (row in rows) {
             val weightSum = row.sumOf { it.weight.toDouble() }.toFloat()
-            val baseUnit = (availableWidth - gap * (row.size - 1)) / max(weightSum, 1f)
+            val baseUnit =
+                (availableWidth - gap * (row.size - 1)) / max(weightSum, 1f)
+
             var x = side
             for (key in row) {
                 val w = baseUnit * key.weight
@@ -194,11 +206,16 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
             }
             y += rowHeight + gap
         }
+
         return result
     }
 
     internal fun displayLabel(key: KeyDef): String =
-        if (key.action == Action.TEXT && key.value.length == 1 && shift) key.value.uppercase() else key.label
+        if (key.action == Action.TEXT && key.value.length == 1 && shift) {
+            key.value.uppercase()
+        } else {
+            key.label
+        }
 
     internal fun isNativeBlurEnabled(): Boolean =
         (context as? LiquidImeService)?.isNativeBlurEnabled() == true
@@ -217,7 +234,9 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
     internal fun releaseAt(x: Float, y: Float) {
         val key = keyAt(x, y)
         val pressed = pressedKey
-        if (pressed != null && pressed == key) handleKey(pressed)
+        if (pressed != null && pressed == key) {
+            handleKey(pressed)
+        }
         pressedKey = null
         invalidateAll()
     }
@@ -229,31 +248,47 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
 
     private fun invalidateAll() {
         invalidate()
-        glassView.invalidate()
         surfaceView.invalidate()
+        glassView.invalidate()
         foregroundView.invalidate()
     }
 
     private fun keyAt(x: Float, y: Float): KeyDef? {
         val rows = currentRows()
         val rects = layoutRects(rows)
-        for (i in rects.indices) if (rects[i].contains(x, y)) return rows.flatten()[i]
+
+        for (i in rects.indices) {
+            if (rects[i].contains(x, y)) {
+                return rows.flatten()[i]
+            }
+        }
+
         return null
     }
 
     private fun handleKey(key: KeyDef) {
         val ime = context as? LiquidImeService ?: return
+
         when (key.action) {
             Action.TEXT -> {
-                ime.commitText(if (key.value.length == 1 && shift) key.value.uppercase() else key.value)
+                ime.commitText(
+                    if (key.value.length == 1 && shift) {
+                        key.value.uppercase()
+                    } else {
+                        key.value
+                    }
+                )
                 if (shift) shift = false
             }
+
             Action.BACKSPACE -> ime.deleteBackward()
             Action.ENTER -> ime.sendEnter()
+
             Action.SPACE -> {
                 ime.commitText(" ")
                 if (shift) shift = false
             }
+
             Action.SHIFT -> shift = !shift
             Action.MODE -> numeric = !numeric
         }
@@ -274,44 +309,17 @@ private class KeyboardGlassSurfaceView(
     private val stroke = Paint(Paint.ANTI_ALIAS_FLAG)
     private val highlight = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    private fun dp(value: Float): Float = resources.displayMetrics.density * value
+    private fun dp(value: Float): Float =
+        resources.displayMetrics.density * value
 
     override fun onDraw(canvas: Canvas) {
         val outer = host.outerRect()
 
+        // Base material only. The actual optical surface is the LiquidGlassView
+        // drawn immediately above this view.
         fill.style = Paint.Style.FILL
-        fill.color = if (host.isOpticalMode()) 0x08FFFFFF else 0x10FFFFFF
-        canvas.drawRoundRect(outer, dp(26f), dp(26f), fill)
-
-        stroke.style = Paint.Style.STROKE
-        stroke.strokeWidth = dp(1.0f)
-        stroke.color = 0x66FFFFFF
-        canvas.drawRoundRect(outer, dp(26f), dp(26f), stroke)
-
-        stroke.strokeWidth = dp(0.6f)
-        stroke.color = 0x22FFFFFF
-        val inner = RectF(
-            outer.left + dp(2f),
-            outer.top + dp(2f),
-            outer.right - dp(2f),
-            outer.bottom - dp(2f)
-        )
-        canvas.drawRoundRect(inner, dp(24f), dp(24f), stroke)
-
-        highlight.style = Paint.Style.STROKE
-        highlight.strokeWidth = dp(1.2f)
-        highlight.color = 0x22FFFFFF
-        canvas.drawRoundRect(
-            RectF(
-                outer.left + dp(5f),
-                outer.top + dp(3f),
-                outer.right - dp(5f),
-                outer.top + dp(24f)
-            ),
-            dp(16f),
-            dp(16f),
-            highlight
-        )
+        fill.color = 0x08FFFFFF
+        canvas.drawRoundRect(outer, dp(38f), dp(38f), fill)
 
         val rows = host.currentRows()
         val rects = host.layoutRects(rows)
@@ -320,12 +328,24 @@ private class KeyboardGlassSurfaceView(
             val rect = rects[i]
             val active = host.isKeyPressed(i)
 
-            fill.color = if (active) 0x32FFFFFF else 0x12FFFFFF
-            canvas.drawRoundRect(rect, dp(12f), dp(12f), fill)
+            fill.color = if (active) 0x2AFFFFFF else 0x11FFFFFF
+            canvas.drawRoundRect(rect, dp(13f), dp(13f), fill)
 
-            stroke.strokeWidth = dp(0.8f)
-            stroke.color = if (active) 0x68FFFFFF else 0x2DFFFFFF
-            canvas.drawRoundRect(rect, dp(12f), dp(12f), stroke)
+            stroke.style = Paint.Style.STROKE
+            stroke.strokeWidth = dp(0.7f)
+            stroke.color = if (active) 0x5FFFFFFF else 0x24FFFFFF
+            canvas.drawRoundRect(rect, dp(13f), dp(13f), stroke)
+
+            highlight.style = Paint.Style.STROKE
+            highlight.strokeWidth = dp(0.45f)
+            highlight.color = 0x15FFFFFF
+            canvas.drawLine(
+                rect.left + dp(8f),
+                rect.top + dp(6f),
+                rect.right - dp(8f),
+                rect.top + dp(6f),
+                highlight
+            )
         }
     }
 }
@@ -334,36 +354,18 @@ private class KeyboardForegroundView(
     context: android.content.Context,
     private val host: ImeGlassPanelView
 ) : View(context) {
-    private val text = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val small = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+    }
 
     init {
         isClickable = true
-        text.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-        small.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
     }
 
-    private fun dp(value: Float): Float = value * resources.displayMetrics.density
+    private fun dp(value: Float): Float =
+        value * resources.displayMetrics.density
 
     override fun onDraw(canvas: Canvas) {
-        small.textSize = dp(11f)
-        small.color = 0xD8FFFFFF.toInt()
-
-        canvas.drawText("LIQUID GLASS", dp(22f), dp(27f), small)
-
-        val status = when {
-            host.isOpticalMode() -> "LIVE OPTICAL"
-            host.isNativeBlurEnabled() -> "LIVE AMBIENT"
-            else -> "FALLBACK"
-        }
-
-        canvas.drawText(
-            status,
-            width - dp(22f) - small.measureText(status),
-            dp(27f),
-            small
-        )
-
         val rows = host.currentRows()
         val rects = host.layoutRects(rows)
         val flat = rows.flatten()
