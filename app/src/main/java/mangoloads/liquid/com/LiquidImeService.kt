@@ -13,6 +13,7 @@ import android.view.inputmethod.EditorInfo
 
 class LiquidImeService : InputMethodService() {
     private var blurEnabled = false
+    private var localOpticalBackdrop = false
     private var panel: ImeGlassPanelView? = null
 
     override fun onCreate() {
@@ -24,7 +25,10 @@ class LiquidImeService : InputMethodService() {
         val view = ImeGlassPanelView(this)
         panel = view
         window?.window?.let(::configureWindow)
-        view.post { window?.window?.let(::configureWindow) }
+        view.post {
+            window?.window?.let(::configureWindow)
+            view.refreshBackdropMode()
+        }
         return view
     }
 
@@ -32,16 +36,16 @@ class LiquidImeService : InputMethodService() {
         super.onStartInputView(info, restarting)
         window?.window?.let(::configureWindow)
         panel?.resetTransientState()
+        panel?.refreshBackdropMode()
     }
 
     override fun onWindowShown() {
         super.onWindowShown()
         window?.window?.let(::configureWindow)
+        panel?.refreshBackdropMode()
     }
 
     override fun onConfigureWindow(win: Window, isFullscreen: Boolean, isCandidatesOnly: Boolean) {
-        // Let InputMethodService use MATCH_PARENT x WRAP_CONTENT in non-fullscreen mode.
-        // A forced fixed window height caused bottom clipping/dead space on ColorOS.
         super.onConfigureWindow(win, false, isCandidatesOnly)
         configureWindow(win)
     }
@@ -51,9 +55,15 @@ class LiquidImeService : InputMethodService() {
 
     override fun onComputeInsets(outInsets: Insets) {
         super.onComputeInsets(outInsets)
-        // Make the entire compact keyboard frame touchable.
         outInsets.touchableInsets = Insets.TOUCHABLE_INSETS_FRAME
     }
+
+    internal fun updateOpticalBackdropAvailable(available: Boolean) {
+        localOpticalBackdrop = available
+        window?.window?.let(::configureWindow)
+    }
+
+    internal fun hasLocalOpticalBackdrop(): Boolean = localOpticalBackdrop
 
     private fun configureWindow(window: Window) {
         window.setDimAmount(0f)
@@ -71,9 +81,11 @@ class LiquidImeService : InputMethodService() {
                 wm?.isCrossWindowBlurEnabled == true
             }.getOrDefault(false) && !isBatterySaver()
 
-            // True live environmental layer: the OS compositor blurs the
-            // application behind the IME. No screenshots or bitmap loop.
-            window.setBackgroundBlurRadius(if (blurEnabled) 78 else 0)
+            // When the Lab Activity is available in our own process, the
+            // QWEA0 view directly samples that Activity window for real
+            // refraction, so avoid stacking a second compositor blur.
+            val nativeBlurRadius = if (localOpticalBackdrop) 0 else 78
+            window.setBackgroundBlurRadius(if (blurEnabled) nativeBlurRadius else 0)
 
             val attrs = window.attributes
             attrs.dimAmount = 0f
@@ -82,7 +94,7 @@ class LiquidImeService : InputMethodService() {
         }
     }
 
-    fun isNativeBlurEnabled(): Boolean = blurEnabled
+    fun isNativeBlurEnabled(): Boolean = blurEnabled && !localOpticalBackdrop
 
     fun commitText(text: String) {
         currentInputConnection?.commitText(text, 1)
@@ -94,10 +106,16 @@ class LiquidImeService : InputMethodService() {
 
     fun sendEnter() {
         currentInputConnection?.sendKeyEvent(
-            android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_ENTER)
+            android.view.KeyEvent(
+                android.view.KeyEvent.ACTION_DOWN,
+                android.view.KeyEvent.KEYCODE_ENTER
+            )
         )
         currentInputConnection?.sendKeyEvent(
-            android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_ENTER)
+            android.view.KeyEvent(
+                android.view.KeyEvent.ACTION_UP,
+                android.view.KeyEvent.KEYCODE_ENTER
+            )
         )
     }
 

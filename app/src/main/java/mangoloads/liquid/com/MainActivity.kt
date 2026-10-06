@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
+import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
@@ -12,19 +13,34 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import com.example.liquidglass.GlassMaterial
 import com.example.liquidglass.LiquidGlassView
+import java.lang.ref.WeakReference
 
 class MainActivity : android.app.Activity() {
+    private var rootRef: WeakReference<View>? = null
+
+    companion object {
+        @Volatile
+        private var activeBackdropRoot: WeakReference<View>? = null
+
+        fun activeBackdropSource(): View? {
+            val view = activeBackdropRoot?.get()
+            return view?.takeIf { it.isAttachedToWindow }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Keep this lab Activity full-size when the IME appears so the native
-        // cross-window blur has real content behind the keyboard instead of a
-        // resized/empty region. This is only for the Liquid Lab test harness.
-        window.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        window.setSoftInputMode(
+            android.view.WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING
+        )
 
         val root = FrameLayout(this)
         root.setBackgroundColor(Color.rgb(6, 8, 16))
         setContentView(root)
+
+        rootRef = WeakReference(root)
+        activeBackdropRoot = rootRef
 
         root.addView(AnimatedBackdropView(this), FrameLayout.LayoutParams(-1, -1))
 
@@ -41,7 +57,8 @@ class MainActivity : android.app.Activity() {
 
         glass.addView(
             TextView(this).apply {
-                text = "LIQUID GLASS\nOptical lens test"
+                text = "LIQUID GLASS
+Optical lens test"
                 textSize = 21f
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
@@ -71,9 +88,13 @@ class MainActivity : android.app.Activity() {
                 (12 * resources.displayMetrics.density).toInt()
             )
         }
+
         root.addView(
             edit,
-            FrameLayout.LayoutParams(-1, (82 * resources.displayMetrics.density).toInt()).apply {
+            FrameLayout.LayoutParams(
+                -1,
+                (82 * resources.displayMetrics.density).toInt()
+            ).apply {
                 gravity = Gravity.BOTTOM
                 leftMargin = (20 * resources.displayMetrics.density).toInt()
                 rightMargin = (20 * resources.displayMetrics.density).toInt()
@@ -83,11 +104,17 @@ class MainActivity : android.app.Activity() {
 
         val button = Button(this).apply {
             text = "Open keyboard settings"
-            setOnClickListener { startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)) }
+            setOnClickListener {
+                startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
+            }
         }
+
         root.addView(
             button,
-            FrameLayout.LayoutParams(-1, (62 * resources.displayMetrics.density).toInt()).apply {
+            FrameLayout.LayoutParams(
+                -1,
+                (62 * resources.displayMetrics.density).toInt()
+            ).apply {
                 gravity = Gravity.BOTTOM
                 leftMargin = (20 * resources.displayMetrics.density).toInt()
                 rightMargin = (20 * resources.displayMetrics.density).toInt()
@@ -102,6 +129,7 @@ class MainActivity : android.app.Activity() {
             setPadding(12, 6, 12, 6)
             setBackgroundColor(0x40000000)
         }
+
         root.addView(
             info,
             FrameLayout.LayoutParams(-2, -2).apply {
@@ -119,5 +147,14 @@ class MainActivity : android.app.Activity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        val current = activeBackdropRoot?.get()
+        if (current === rootRef?.get()) {
+            activeBackdropRoot = null
+        }
+        rootRef = null
+        super.onDestroy()
     }
 }

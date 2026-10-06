@@ -11,8 +11,8 @@ android {
         applicationId = "mangoloads.liquid.com"
         minSdk = 33
         targetSdk = 34
-        versionCode = 5
-        versionName = "0.5-ime-window-fix"
+        versionCode = 6
+        versionName = "0.6-liquid-glass-optical-ime"
     }
 
     signingConfigs {
