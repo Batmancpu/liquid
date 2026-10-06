@@ -2,9 +2,7 @@ package mangoloads.liquid.com
 
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.RectF
 import android.view.View
-import kotlin.math.max
 
 class KeyboardBackdropView(
     context: android.content.Context,
@@ -15,8 +13,7 @@ class KeyboardBackdropView(
     private val edge = Paint(Paint.ANTI_ALIAS_FLAG)
     private val accent = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    private fun dp(value: Float): Float =
-        value * resources.displayMetrics.density
+    private fun dp(value: Float): Float = value * resources.displayMetrics.density
 
     override fun onDraw(canvas: Canvas) {
         val outer = host.outerRect()

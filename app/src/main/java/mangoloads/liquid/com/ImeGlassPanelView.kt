@@ -2,6 +2,7 @@ package mangoloads.liquid.com
 
 import android.graphics.Color
 import android.graphics.RectF
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -33,7 +34,6 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         value * resources.displayMetrics.density
 
     init {
-        setWillNotDraw(false)
         isClickable = false
         clipChildren = false
         setBackgroundColor(Color.TRANSPARENT)
@@ -53,12 +53,9 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
             cornerRadius = dp(26f)
             refractionHeight = dp(30f)
             bevelWidth = dp(26f)
-            refractionFalloff = 2f
             dispersionStrength = 0.055f
             enableSensorHighlight = true
             enableAdaptiveTint = true
-            enablePressEffect = false
-            glassTint = 0x1A74A7FF
             isClickable = false
             isFocusable = false
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -80,13 +77,9 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         )
-
         foregroundView.bringToFront()
 
-        post {
-            glassView.enableDynamicBackground = true
-            glassView.invalidate()
-        }
+        post { glassView.invalidate() }
     }
 
     override fun onDetachedFromWindow() {
@@ -197,34 +190,32 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
     internal fun pressAt(x: Float, y: Float) {
         pressedKey = keyAt(x, y)
         invalidate()
+        backdropView.invalidate()
+        foregroundView.invalidate()
     }
 
     internal fun releaseAt(x: Float, y: Float) {
         val key = keyAt(x, y)
         val pressed = pressedKey
-        if (pressed != null && pressed === key) {
-            handleKey(pressed)
-        }
+        if (pressed != null && pressed === key) handleKey(pressed)
         pressedKey = null
         invalidate()
-        foregroundView.invalidate()
         backdropView.invalidate()
+        foregroundView.invalidate()
     }
 
     internal fun cancelPress() {
         pressedKey = null
         invalidate()
-        foregroundView.invalidate()
         backdropView.invalidate()
+        foregroundView.invalidate()
     }
 
     private fun keyAt(x: Float, y: Float): KeyDef? {
         val rows = currentRows()
         val rects = layoutRects(rows)
         for (i in rects.indices) {
-            if (rects[i].contains(x, y)) {
-                return rows.flatten()[i]
-            }
+            if (rects[i].contains(x, y)) return rows.flatten()[i]
         }
         return null
     }
@@ -234,22 +225,16 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
 
         when (key.action) {
             Action.TEXT -> {
-                val value = if (key.value.length == 1 && shift) {
-                    key.value.uppercase()
-                } else {
-                    key.value
-                }
+                val value = if (key.value.length == 1 && shift) key.value.uppercase() else key.value
                 ime.commitText(value)
                 if (shift) shift = false
             }
-
             Action.BACKSPACE -> ime.deleteBackward()
             Action.ENTER -> ime.sendEnter()
             Action.SPACE -> {
                 ime.commitText(" ")
                 if (shift) shift = false
             }
-
             Action.SHIFT -> shift = !shift
             Action.MODE -> numeric = !numeric
         }
@@ -260,5 +245,83 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         invalidate()
         foregroundView.invalidate()
         backdropView.invalidate()
+    }
+}
+
+class KeyboardForegroundView(
+    context: android.content.Context,
+    private val host: ImeGlassPanelView
+) : View(context) {
+
+    private val text = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+    private val small = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+
+    init {
+        isClickable = true
+        text.typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+        small.typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+    }
+
+    private fun dp(value: Float): Float = value * resources.displayMetrics.density
+
+    override fun onDraw(canvas: android.graphics.Canvas) {
+        small.textSize = dp(11f)
+        small.color = 0xD8FFFFFF.toInt()
+        canvas.drawText("LIQUID GLASS", dp(22f), dp(27f), small)
+
+        val status = if (host.isNativeBlurEnabled()) "LIVE AMBIENT • OPTICAL" else "FALLBACK • OPTICAL"
+        canvas.drawText(
+            status,
+            width - dp(22f) - small.measureText(status),
+            dp(27f),
+            small
+        )
+
+        val rows = host.currentRows()
+        val rects = host.layoutRects(rows)
+        val flat = rows.flatten()
+
+        for (i in rects.indices) {
+            val key = flat[i]
+            val rect = rects[i]
+
+            if (host.isKeyPressed(i)) {
+                val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                    style = android.graphics.Paint.Style.FILL
+                    color = 0x22FFFFFF
+                }
+                canvas.drawRoundRect(rect, dp(12f), dp(12f), p)
+            }
+
+            text.textSize = when (key.action) {
+                ImeGlassPanelView.Action.SPACE -> dp(10f)
+                ImeGlassPanelView.Action.MODE -> dp(9f)
+                else -> dp(14f)
+            }
+            text.color = Color.WHITE
+
+            val label = host.displayLabel(key)
+            val tx = rect.centerX() - text.measureText(label) / 2f
+            val ty = rect.centerY() - (text.ascent() + text.descent()) / 2f
+            canvas.drawText(label, tx, ty, text)
+        }
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                host.pressAt(event.x, event.y)
+                return true
+            }
+            MotionEvent.ACTION_UP -> {
+                host.releaseAt(event.x, event.y)
+                return true
+            }
+            MotionEvent.ACTION_CANCEL -> {
+                host.cancelPress()
+                return true
+            }
+        }
+        return true
     }
 }
