@@ -94,17 +94,17 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         super.onDetachedFromWindow()
     }
 
-    fun outerRect(): RectF = RectF(
+    internal fun outerRect(): RectF = RectF(
         dp(8f),
         dp(6f),
         width - dp(8f),
         height - dp(6f)
     )
 
-    fun isNativeBlurEnabled(): Boolean =
+    internal fun isNativeBlurEnabled(): Boolean =
         (context as? LiquidImeService)?.isNativeBlurEnabled() == true
 
-    fun currentRows(): List<List<KeyDef>> {
+    internal fun currentRows(): List<List<KeyDef>> {
         if (numeric) {
             return listOf(
                 "1234567890".map { KeyDef(it.toString(), Action.TEXT, it.toString()) },
@@ -153,8 +153,7 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         )
     }
 
-    fun layoutRects(rows: List<List<KeyDef>>): List<RectF> {
-        val d = resources.displayMetrics.density
+    internal fun layoutRects(rows: List<List<KeyDef>>): List<RectF> {
         val gap = dp(5f)
         val side = dp(14f)
         val top = dp(39f)
@@ -183,24 +182,24 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         return result
     }
 
-    fun displayLabel(key: KeyDef): String =
+    internal fun displayLabel(key: KeyDef): String =
         if (key.action == Action.TEXT && key.value.length == 1 && shift) {
             key.value.uppercase()
         } else {
             key.label
         }
 
-    fun isKeyPressed(index: Int): Boolean {
+    internal fun isKeyPressed(index: Int): Boolean {
         val key = currentRows().flatten().getOrNull(index)
         return key != null && key === pressedKey
     }
 
-    fun pressAt(x: Float, y: Float) {
+    internal fun pressAt(x: Float, y: Float) {
         pressedKey = keyAt(x, y)
         invalidate()
     }
 
-    fun releaseAt(x: Float, y: Float) {
+    internal fun releaseAt(x: Float, y: Float) {
         val key = keyAt(x, y)
         val pressed = pressedKey
         if (pressed != null && pressed === key) {
@@ -212,7 +211,7 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         backdropView.invalidate()
     }
 
-    fun cancelPress() {
+    internal fun cancelPress() {
         pressedKey = null
         invalidate()
         foregroundView.invalidate()
@@ -256,7 +255,7 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
         }
     }
 
-    fun resetTransientState() {
+    internal fun resetTransientState() {
         pressedKey = null
         invalidate()
         foregroundView.invalidate()
