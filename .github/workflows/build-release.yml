@@ -57,6 +57,5 @@ jobs:
             Liquid Lab experimental build.
             Package: mangoloads.liquid.com
             APK: mangoloads.liquid.com.apk
-            Optical test: QWEA0 View-system Liquid Glass
-            IME test: Android native cross-window blur
-            This is an experimental pre-release for physical-device testing.
+            IME test: Android native cross-window ambient haze
+            No MediaProjection, screenshot loop, root, or Shizuku is used.
