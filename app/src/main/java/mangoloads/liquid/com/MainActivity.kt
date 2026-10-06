@@ -42,18 +42,6 @@ class MainActivity : android.app.Activity() {
 
         root.addView(AnimatedBackdropView(this), FrameLayout.LayoutParams(-1, -1))
 
-        val demo = AmbientDemoSurface(this)
-        root.addView(
-            demo,
-            FrameLayout.LayoutParams(
-                -1,
-                (180 * resources.displayMetrics.density).toInt()
-            ).apply {
-                gravity = Gravity.TOP
-                topMargin = (110 * resources.displayMetrics.density).toInt()
-            }
-        )
-
         val edit = EditText(this).apply {
             hint = "Tap here to test the glass keyboard"
             textSize = 18f
