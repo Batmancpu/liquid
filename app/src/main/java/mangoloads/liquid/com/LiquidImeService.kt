@@ -14,7 +14,6 @@ import android.view.inputmethod.EditorInfo
 class LiquidImeService : InputMethodService() {
     private lateinit var ambientLight: AmbientLightController
     private var blurEnabled = false
-    private var localOpticalBackdrop = false
     private var panel: ImeGlassPanelView? = null
 
     override fun onCreate() {
@@ -62,7 +61,6 @@ class LiquidImeService : InputMethodService() {
     }
 
     internal fun updateOpticalBackdropAvailable(available: Boolean) {
-        localOpticalBackdrop = available
         window?.window?.let(::configureWindow)
     }
 
@@ -84,7 +82,7 @@ class LiquidImeService : InputMethodService() {
                 wm?.isCrossWindowBlurEnabled == true
             }.getOrDefault(false) && !isBatterySaver()
 
-            val nativeBlurRadius = if (localOpticalBackdrop) 0 else 78
+            val nativeBlurRadius = 78
             window.setBackgroundBlurRadius(
                 if (blurEnabled) nativeBlurRadius else 0
             )
@@ -99,7 +97,7 @@ class LiquidImeService : InputMethodService() {
     internal fun ambientState(): AmbientLightController.State = ambientLight.current()
 
     fun isNativeBlurEnabled(): Boolean =
-        blurEnabled && !localOpticalBackdrop
+        blurEnabled
 
     fun commitText(text: String) {
         currentInputConnection?.commitText(text, 1)
