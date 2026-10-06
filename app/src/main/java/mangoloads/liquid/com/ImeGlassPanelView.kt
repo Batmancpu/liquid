@@ -88,13 +88,13 @@ class ImeGlassPanelView(context: android.content.Context) : FrameLayout(context)
             // QWEA0 explicitly supports a backdrop View from another window;
             // overlap is resolved in screen coordinates and the AGSL lens gets
             // the actual Activity pixels rather than our own keyboard keys.
-            glassView.setBackdropSource(root)
+            glassView.backdropSource = root
             glassView.enableDynamicBackground = true
             glassView.visibility = View.VISIBLE
         } else {
             // No same-process host app is available. Do not let QWEA0 capture
             // the keyboard's own sibling layers and produce false reflection.
-            glassView.setBackdropSource(null)
+            glassView.backdropSource = null
             glassView.enableDynamicBackground = false
             glassView.visibility = View.INVISIBLE
         }

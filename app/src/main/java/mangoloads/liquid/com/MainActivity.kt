@@ -57,8 +57,7 @@ class MainActivity : android.app.Activity() {
 
         glass.addView(
             TextView(this).apply {
-                text = "LIQUID GLASS
-Optical lens test"
+                text = "LIQUID GLASS\nOptical lens test"
                 textSize = 21f
                 setTextColor(Color.WHITE)
                 gravity = Gravity.CENTER
