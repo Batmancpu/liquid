@@ -11,8 +11,6 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
-import com.example.liquidglass.GlassMaterial
-import com.example.liquidglass.LiquidGlassView
 import java.lang.ref.WeakReference
 
 class MainActivity : android.app.Activity() {
@@ -44,33 +42,16 @@ class MainActivity : android.app.Activity() {
 
         root.addView(AnimatedBackdropView(this), FrameLayout.LayoutParams(-1, -1))
 
-        val glass = LiquidGlassView(this).apply {
-            enableDynamicBackground = true
-            material = GlassMaterial.CLEAR
-            cornerRadius = 34f * resources.displayMetrics.density
-            refractionHeight = 72f
-            bevelWidth = 28f
-            dispersionStrength = 0.08f
-            enableSensorHighlight = true
-            enableAdaptiveTint = true
-        }
-
-        glass.addView(
-            TextView(this).apply {
-                text = "LIQUID GLASS\nOptical lens test"
-                textSize = 21f
-                setTextColor(Color.WHITE)
-                gravity = Gravity.CENTER
-            },
-            FrameLayout.LayoutParams(-1, -1)
-        )
-
+        val demo = AmbientDemoSurface(this)
         root.addView(
-            glass,
+            demo,
             FrameLayout.LayoutParams(
-                (300 * resources.displayMetrics.density).toInt(),
-                (132 * resources.displayMetrics.density).toInt()
-            ).apply { gravity = Gravity.CENTER }
+                -1,
+                (180 * resources.displayMetrics.density).toInt()
+            ).apply {
+                gravity = Gravity.TOP
+                topMargin = (110 * resources.displayMetrics.density).toInt()
+            }
         )
 
         val edit = EditText(this).apply {
