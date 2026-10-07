@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EXP Mango</string>
+    <string name="ime_name">EXP Mango Keyboard</string>
+    <string name="ime_subtype_en">English (US)</string>
+    <string name="ime_subtype_hinglish">Hinglish</string>
+    <string name="settings_title">EXP Mango Settings</string>
+</resources>

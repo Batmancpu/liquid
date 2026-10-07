@@ -1,0 +1,8 @@
+{
+  "name": "Liquid Lab",
+  "description": "Experimental Liquid Glass optics, procedural ambient illumination, and cross-window ambient haze laboratory.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
