@@ -26,7 +26,9 @@ Deliver a first working, installable Android **Liquid Glass IME** from `Batmancp
 
 **Batch 0 complete:** handoff foundation committed on `main` as `d84bd36e0f655f1d25c8bbc762c8ec678b8928c0`.
 
-**Batch 1 underway:** add missing root `gradle.properties` with `android.useAndroidX=true`, the exact failure identified from previous CI. Run Actions on this batch before concluding whether there are any additional compile errors. Then implement transparent IME cross-window blur with capability/fallback, run offline audit and CI, fix any compiler errors and obtain debug APK. Record every iteration and resulting run. User must verify cross-app blur on the OPPO because CI cannot.
+**Batch 1 committed:** AndroidX build configuration and handoff as `377de3e16c45abf061e1fdff5d4a48ce5cbb300f`. No successful Actions run for that SHA was yet visible when Batch 2 began; do not call Batch 1 independently compile-tested.
+
+**Batch 2 implementation in progress:** native `MangoImeService` sets the actual InputMethodService window transparent, observes cross-window blur enablement and sets `Window.setBackgroundBlurRadius` on Android 12+; `MangoKeyboardView` draws a semi-transparent light/dark glass surface with rim/specular details, measured phone-sized height and opaque fallback; launcher displays capability and cross-app test instructions; app/IME labels say Liquid Glass. Code is not yet CI-verified or device-tested. Next: publish the batch to `main`, inspect build logs and resolve any compile errors, obtain/install the debug APK, then test in an unrelated app.
 
 ## Release state
 

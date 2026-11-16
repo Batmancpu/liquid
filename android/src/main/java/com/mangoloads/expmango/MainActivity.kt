@@ -2,9 +2,11 @@ package com.mangoloads.expmango
 
 import android.content.Intent
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
+import android.view.WindowManager
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
@@ -25,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val title = TextView(this).apply {
-            text = "EXP Mango Keyboard"
+            text = "Liquid Glass Lab"
             textSize = 24f
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
@@ -33,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         root.addView(title)
 
         val subtitle = TextView(this).apply {
-            text = "100% Offline • English + Hinglish • Predictive Engine"
+            text = "Native Android Keyboard • Cross-app Glass Test • Offline"
             textSize = 13f
             setTextColor(Color.parseColor("#9AA0A6"))
             gravity = Gravity.CENTER
@@ -42,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         root.addView(subtitle)
 
         val enableButton = Button(this).apply {
-            text = "Enable EXP Mango in Settings"
+            text = "Enable Liquid Glass Lab in Settings"
             setBackgroundColor(Color.parseColor("#FF8C00"))
             setTextColor(Color.WHITE)
             setOnClickListener {
@@ -62,8 +64,32 @@ class MainActivity : AppCompatActivity() {
         }
         root.addView(selectButton)
 
+        val systemBlurEnabled = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            getSystemService(WindowManager::class.java)?.isCrossWindowBlurEnabled == true
+
+        val capability = TextView(this).apply {
+            text = if (systemBlurEnabled) {
+                "System cross-window blur: ENABLED (visual effect still needs phone testing)"
+            } else {
+                "System cross-window blur: DISABLED or unavailable (solid-glass fallback)"
+            }
+            textSize = 13f
+            setTextColor(Color.parseColor("#C9D6E6"))
+            setPadding(0, 36, 0, 0)
+            gravity = Gravity.CENTER
+        }
+        root.addView(capability)
+
+        val instructions = TextView(this).apply {
+            text = "Test it outside this app: enable and select the keyboard, then open a browser, messenger or notes app. Type over different colored backgrounds. The native system blur may be disabled by ColorOS or battery saver."
+            textSize = 13f
+            setTextColor(Color.parseColor("#9AA0A6"))
+            setPadding(0, 18, 0, 0)
+        }
+        root.addView(instructions)
+
         val testField = EditText(this).apply {
-            hint = "Tap here to test typing (e.g. kya baat hai)"
+            hint = "Local typing check (cross-app test is required)"
             setHintTextColor(Color.parseColor("#666D7D"))
             setTextColor(Color.WHITE)
             setBackgroundColor(Color.parseColor("#1B1F2A"))

@@ -10,10 +10,10 @@ Updated 16 November 2026 IST. Entries are **planned** unless checked and evidenc
 
 ## Phase 1 — first native cross-app Liquid test APK
 
-- [ ] Fix missing `android.useAndroidX` build configuration and compile current baseline.
-- [ ] Set a truly translucent IME window and paint an ambient-blur-compatible chassis.
-- [ ] Enable Android cross-window background blur with runtime capability check/listener and visible fallback.
-- [ ] Draw usable, rounded keys with subtle rim highlights, key press response, high-contrast light/dark labels.
+- [x] Add missing `android.useAndroidX` configuration (independent compile result pending).
+- [x] Implement a translucent IME window and paint an ambient-blur-compatible chassis (device result pending).
+- [x] Implement Android cross-window background blur with runtime capability check/listener and visible fallback (device result pending).
+- [x] Draw rounded keys with subtle rim highlights, key press response, high-contrast light/dark labels (visual test pending).
 - [ ] Preserve functioning typing, delete, enter, shift, numeric mode and secure-field policies.
 - [ ] Run offline/privacy audit, clean debug Android build and verify artifact path/package metadata.
 - [ ] Offer installable APK and record exact run, source SHA and checksums when available.
