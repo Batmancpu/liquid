@@ -30,6 +30,10 @@ Deliver a first working, installable Android **Liquid Glass IME** from `Batmancp
 
 **Batch 2 committed:** `1aaae3c32be3f5e6caf18a4170e5deb69c3bdfb2` on `main`. Native `MangoImeService` sets the actual InputMethodService window transparent, observes cross-window blur enablement and sets `Window.setBackgroundBlurRadius` on Android 12+; `MangoKeyboardView` draws a semi-transparent light/dark glass surface with rim/specular details, measured phone-sized height and opaque fallback; launcher displays capability and cross-app test instructions; app/IME labels say Liquid Glass. Local `scripts/audit-offline.sh` and `git diff --check` passed. **No new CI build has appeared** for `377de3e` or `1aaae3c` after the Git Data API ref updates; only the preceding docs-only failed run is visible. The browser is not signed in to trigger Actions manually. Next: use the connected GitHub Contents API for a legitimate handoff checkpoint, re-check CI trigger, inspect build logs, resolve compiler errors, and offer an APK only after successful assembly. Cross-app behavior remains phone-unverified.
 
+**Build success:** GitHub Actions run `43800132882` on `60bace1` passed Android compile, APK assembly, offline audit and artifact upload. Earlier “no new CI” note is superseded.
+
+**Batch 3:** ship a direct GitHub Releases APK using the gated `release:` Actions path and standard temporary debug signing. The release has to be verified before being called live. Critical known risk: Android docs require the window to be both translucent and floating for `setBackgroundBlurRadius` to show; the system IME may be nonfloating. This is a device feasibility test. Permanent signing needs securely configured GitHub Actions secrets; do not publish a keystore.
+
 ## Release state
 
 No verified new APK from this session yet. Do not claim installation, OEM blur support, optical performance or battery performance without evidence.

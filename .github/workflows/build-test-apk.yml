@@ -1,5 +1,8 @@
 name: Build EXP Mango Debug APK
 
+permissions:
+  contents: write
+
 on:
   push:
     branches:
@@ -68,3 +71,22 @@ jobs:
           path: expmango-debug.apk
           if-no-files-found: error
           retention-days: 7
+
+      - name: Prepare prerelease APK and checksum
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')
+        run: |
+          cp expmango-debug.apk LiquidGlassLab-test.apk
+          sha256sum LiquidGlassLab-test.apk > LiquidGlassLab-test.apk.sha256
+
+      - name: Publish experimental GitHub prerelease
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && startsWith(github.event.head_commit.message, 'release:')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create liquid-test-1.0.0 \
+            LiquidGlassLab-test.apk \
+            LiquidGlassLab-test.apk.sha256 \
+            --target "$GITHUB_SHA" \
+            --title "Liquid Glass Lab 1.0.0 — experimental cross-app IME" \
+            --notes-file docs/RELEASE_NOTES_ALPHA.md \
+            --prerelease
