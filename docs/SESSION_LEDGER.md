@@ -1,0 +1,14 @@
+# Liquid — append-only engineering/session ledger
+
+Every batch starts with its scope and base SHA, and ends with actual verification evidence. Do not silently remove earlier entries. `context.md` always points at the latest live state.
+
+## 2026-11-16 IST — Batch 0: restore project continuity and investigate feasibility
+
+- **Owner request:** “find my Liquid Glass repository, deeply think on it” and inspect the other actively developed repositories for “agents.md context files, AI files and everything”; “every change should be noted in there in small batches”. Follow-up: “make this keyboard exactly like that” and “Give me the best APK that I can install on my phone” with the critical constraint that glass must work “outside the app”.
+- **Starting source:** `main` SHA `6417dffb89a7a05dcbfe6155c5f62181f5d51606`; clean checkout; latest pre-session Actions failure: https://github.com/Batmancpu/liquid/actions/runs/39292839403 .
+- **Reference continuity practices inspected:** `Batmancpu/brrrBoard/AGENTS.md` + `PROJECT_CONTEXT.md`, `Batmancpu/Player/AGENTS.md` + `PROJECT_CONTEXT.md` + `DEVELOPMENT_LOG.md`, `Batmancpu/CurrentLens/AGENTS.md` + `context.md`. Adopt small, frequent commits; a short resume checkpoint; immutable chronology; exact tests/failures; separate implemented, CI verified and phone verified; maintain only `main`.
+- **Investigation:** Native `android` module is currently an opaque custom `MangoKeyboardView`; it does not use `Window.setBackgroundBlurRadius`, `WindowManager.isCrossWindowBlurEnabled`, or custom Android optics. React `src/` has CSS blur/optics simulation but does not run as the system keyboard. The latest CI failed at `:app:checkDebugAarMetadata` because `android.useAndroidX` is absent. `docs/JULES_LIQUID_GLASS_TASK.md` calls for native IME blur but its status is aspirational; `docs/THIRD_PARTY.md` inaccurately says QWEA0 is pinned.
+- **Research:** Apple's design guidance differentiates control-layer glass from ordinary content material and prioritizes legibility. Android AOSP supports cross-window compositor blur on API 31+ when enabled, but its runtime shader cannot automatically sample unrelated app content. References and chosen/rejected approaches: `docs/DECISIONS.md`.
+- **Batch 0 changes:** Create `AGENTS.md` (agent contract), `context.md` (resume state), `docs/DECISIONS.md` (source-backed tradeoffs), `docs/ROADMAP.md` (ordered gates), and this ledger. These files are documentation only and cannot create an APK or prove device behavior.
+- **Verification:** Repository source, previous workflow steps and failure logs inspected through GitHub; local checkout and `git log` checked. Full Android build **not yet run** in this batch.
+- **Next:** Fix AndroidX build blocker and wire real native IME window blur in small batches. Run Actions, inspect logs and publish debug APK link only after successful artifact. Keep brrrBoard untouched.
