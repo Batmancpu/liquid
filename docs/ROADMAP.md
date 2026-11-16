@@ -6,7 +6,7 @@ Updated 16 November 2026 IST. Entries are **planned** unless checked and evidenc
 
 - [x] Inspect main branch, Android and React architecture, previous CI failure and license notes.
 - [x] Research cross-window blur versus shader access and Apple's materials guidance.
-- [ ] Establish and commit `AGENTS.md`, `context.md`, chronological ledger and decision log.
+- [x] Establish and commit `AGENTS.md`, `context.md`, chronological ledger and decision log (`d84bd36`).
 
 ## Phase 1 — first native cross-app Liquid test APK
 

@@ -12,3 +12,13 @@ Every batch starts with its scope and base SHA, and ends with actual verificatio
 - **Batch 0 changes:** Create `AGENTS.md` (agent contract), `context.md` (resume state), `docs/DECISIONS.md` (source-backed tradeoffs), `docs/ROADMAP.md` (ordered gates), and this ledger. These files are documentation only and cannot create an APK or prove device behavior.
 - **Verification:** Repository source, previous workflow steps and failure logs inspected through GitHub; local checkout and `git log` checked. Full Android build **not yet run** in this batch.
 - **Next:** Fix AndroidX build blocker and wire real native IME window blur in small batches. Run Actions, inspect logs and publish debug APK link only after successful artifact. Keep brrrBoard untouched.
+
+## 2026-11-16 IST — Batch 1: AndroidX build unblock
+
+- **Start SHA:** `d84bd36e0f655f1d25c8bbc762c8ec678b8928c0` (`main`, continuity docs committed).
+- **Goal:** clear precisely evidenced `:app:checkDebugAarMetadata` failure so CI can reach the Kotlin compiler and actually assemble a debug APK.
+- **Change:** root `gradle.properties` enables `android.useAndroidX=true` (AndroidX dependencies declared by `android/build.gradle.kts`), with bounded JVM allocation and Kotlin formatting convention. `context.md`, `docs/ROADMAP.md` and this ledger are updated in the same batch to keep the resume point honest.
+- **Why:** previous run `39292839403` states `Configuration :app:debugRuntimeClasspath contains AndroidX dependencies, but ... android.useAndroidX ... is not enabled. Set android.useAndroidX=true in gradle.properties`. There was no file at repository root.
+- **Choice / rejection:** change the missing Gradle property, not disable necessary AndroidX dependencies or upgrade unrelated toolchains.
+- **Verification pending when authored:** `git diff --check`, `./scripts/audit-offline.sh`, then GitHub Actions `:app:assembleDebug`. If CI proceeds and reveals the next error, record and fix it separately. No APK/device validation claimed in this entry.
+- **Next:** inspect the resulting Actions job, then implement native compositor blur in the IME service and transparent keyboard render in Batch 2.

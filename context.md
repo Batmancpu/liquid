@@ -24,7 +24,9 @@ Deliver a first working, installable Android **Liquid Glass IME** from `Batmancp
 
 ## Current batch and next action
 
-**Batch 0 underway**: establish `AGENTS.md`, `context.md`, `docs/SESSION_LEDGER.md`, `docs/DECISIONS.md`, `docs/ROADMAP.md` on main. After this, fix AndroidX CI, implement transparent IME cross-window blur with capability/fallback display, run offline audit and CI, fix any compiler errors and obtain debug APK. Document every iteration and resulting run. User must verify cross-app blur on the OPPO because CI cannot.
+**Batch 0 complete:** handoff foundation committed on `main` as `d84bd36e0f655f1d25c8bbc762c8ec678b8928c0`.
+
+**Batch 1 underway:** add missing root `gradle.properties` with `android.useAndroidX=true`, the exact failure identified from previous CI. Run Actions on this batch before concluding whether there are any additional compile errors. Then implement transparent IME cross-window blur with capability/fallback, run offline audit and CI, fix any compiler errors and obtain debug APK. Record every iteration and resulting run. User must verify cross-app blur on the OPPO because CI cannot.
 
 ## Release state
 
